@@ -7,6 +7,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <stdio.h>
 #include <tchar.h>
@@ -342,10 +343,185 @@ __inline static size_t wstring_split_to_vector(std::vector<std::wstring> & wsv, 
 	}
 	return wsv.size();
 }
+__inline static std::string STRING_FORMAT_A(const CHAR * paFormat, ...)
+{
+	INT nAS = 0;
+	std::string A = ("");
+
+	va_list valist = { 0 };
+
+	va_start(valist, paFormat);
+
+	nAS = _vscprintf_p(paFormat, valist);
+	if (nAS > 0)
+	{
+		A.resize((nAS + sizeof(CHAR)) * sizeof(CHAR), ('\0'));
+		_vsnprintf((CHAR *)A.c_str(), nAS * sizeof(CHAR), paFormat, valist);
+	}
+
+	va_end(valist);
+
+	return A.c_str();
+}
+
+__inline static std::wstring STRING_FORMAT_W(const WCHAR * pwFormat, ...)
+{
+	INT nWS = 0;
+	std::wstring W = (L"");
+
+	va_list valist = { 0 };
+
+	va_start(valist, pwFormat);
+
+	nWS = _vscwprintf_p(pwFormat, valist);
+	if (nWS > 0)
+	{
+		W.resize((nWS + sizeof(WCHAR)) * sizeof(WCHAR), (L'\0'));
+		_vsnwprintf((WCHAR *)W.c_str(), nWS * sizeof(WCHAR), pwFormat, valist);
+	}
+
+	va_end(valist);
+
+	return W.c_str();
+}
+
+__inline static std::string GetFilePathDriveA(LPCSTR lpFileName)
+{
+	CHAR szDrive[_MAX_DRIVE] = { 0 };
+	CHAR szDir[_MAX_DIR] = { 0 };
+	CHAR szFname[_MAX_FNAME] = { 0 };
+	CHAR szExt[_MAX_EXT] = { 0 };
+
+	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szDrive;
+}
+__inline static std::wstring GetFilePathDriveW(LPCWSTR lpFileName)
+{
+	WCHAR szDrive[_MAX_DRIVE] = { 0 };
+	WCHAR szDir[_MAX_DIR] = { 0 };
+	WCHAR szFname[_MAX_FNAME] = { 0 };
+	WCHAR szExt[_MAX_EXT] = { 0 };
+
+	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szDrive;
+}
+__inline static std::string GetFilePathDirA(LPCSTR lpFileName)
+{
+	CHAR szDrive[_MAX_DRIVE] = { 0 };
+	CHAR szDir[_MAX_DIR] = { 0 };
+	CHAR szFname[_MAX_FNAME] = { 0 };
+	CHAR szExt[_MAX_EXT] = { 0 };
+
+	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szDir;
+}
+__inline static std::wstring GetFilePathDirW(LPCWSTR lpFileName)
+{
+	WCHAR szDrive[_MAX_DRIVE] = { 0 };
+	WCHAR szDir[_MAX_DIR] = { 0 };
+	WCHAR szFname[_MAX_FNAME] = { 0 };
+	WCHAR szExt[_MAX_EXT] = { 0 };
+
+	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szDir;
+}
+__inline static std::string GetFilePathExtA(LPCSTR lpFileName)
+{
+	CHAR szDrive[_MAX_DRIVE] = { 0 };
+	CHAR szDir[_MAX_DIR] = { 0 };
+	CHAR szFname[_MAX_FNAME] = { 0 };
+	CHAR szExt[_MAX_EXT] = { 0 };
+
+	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szExt;
+}
+__inline static std::wstring GetFilePathExtW(LPCWSTR lpFileName)
+{
+	WCHAR szDrive[_MAX_DRIVE] = { 0 };
+	WCHAR szDir[_MAX_DIR] = { 0 };
+	WCHAR szFname[_MAX_FNAME] = { 0 };
+	WCHAR szExt[_MAX_EXT] = { 0 };
+
+	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szExt;
+}
+__inline static std::string GetFilePathFnameA(LPCSTR lpFileName)
+{
+	CHAR szDrive[_MAX_DRIVE] = { 0 };
+	CHAR szDir[_MAX_DIR] = { 0 };
+	CHAR szFname[_MAX_FNAME] = { 0 };
+	CHAR szExt[_MAX_EXT] = { 0 };
+
+	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szFname;
+}
+__inline static std::wstring GetFilePathFnameW(LPCWSTR lpFileName)
+{
+	WCHAR szDrive[_MAX_DRIVE] = { 0 };
+	WCHAR szDir[_MAX_DIR] = { 0 };
+	WCHAR szFname[_MAX_FNAME] = { 0 };
+	WCHAR szExt[_MAX_EXT] = { 0 };
+
+	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+
+	return szFname;
+}
+__inline static void SplitFilePathA(LPCSTR lpFileName, std::string & strDrive,
+	std::string & strDir, std::string & strFname, std::string & strExt)
+{
+	CHAR szDrive[_MAX_DRIVE] = { 0 };
+	CHAR szDir[_MAX_DIR] = { 0 };
+	CHAR szFname[_MAX_FNAME] = { 0 };
+	CHAR szExt[_MAX_EXT] = { 0 };
+
+	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	strDrive = szDrive;
+	strDir = szDir;
+	strFname = szFname;
+	strExt = szExt;
+}
+__inline static void SplitFilePathW(LPCWSTR lpFileName, std::wstring & strDrive,
+	std::wstring & strDir, std::wstring & strFname, std::wstring & strExt)
+{
+	WCHAR szDrive[_MAX_DRIVE] = { 0 };
+	WCHAR szDir[_MAX_DIR] = { 0 };
+	WCHAR szFname[_MAX_FNAME] = { 0 };
+	WCHAR szExt[_MAX_EXT] = { 0 };
+
+	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	strDrive = szDrive;
+	strDir = szDir;
+	strFname = szFname;
+	strExt = szExt;
+}
+
+__inline static void ToLowerA(std::string & s)
+{
+	std::transform(s.begin(), s.end(), s.begin(), std::tolower);
+}
+__inline static void ToLowerW(std::wstring & ws)
+{
+	std::transform(ws.begin(), ws.end(), ws.begin(), std::tolower);
+}
+__inline static void ToUpperA(std::string & s)
+{
+	std::transform(s.begin(), s.end(), s.begin(), std::toupper);
+}
+__inline static void ToUpperW(std::wstring & ws)
+{
+	std::transform(ws.begin(), ws.end(), ws.begin(), std::toupper);
+}
 
 #if !defined(UNICODE) && !defined(_UNICODE)
-#define TO_LOWER tolower
-#define TO_UPPER toupper
+#define TO_LOWER ToLowerA
+#define TO_UPPER ToUpperA
 #define TSTRING std::string
 #define TO_TSTRING std::to_string
 #define TSTRING_REGEX_VALID string_regex_valid
@@ -354,9 +530,17 @@ __inline static size_t wstring_split_to_vector(std::vector<std::wstring> & wsv, 
 #define TSTRING_READER string_reader
 #define TSTRING_REPLACE_ALL string_replace_all
 #define TSTRING_SPLIT_TO_VECTOR string_split_to_vector
+
+#define STRING_FORMAT	STRING_FORMAT_A
+#define ParseError				ParseErrorA
+#define GetFilePathDrive		GetFilePathDriveA
+#define GetFilePathDir			GetFilePathDirA
+#define GetFilePathExt			GetFilePathExtA
+#define GetFilePathFname		GetFilePathFnameA
+#define SplitFilePath			SplitFilePathA
 #else
-#define TO_LOWER towlower
-#define TO_UPPER towupper
+#define TO_LOWER ToLowerW
+#define TO_UPPER ToUpperW
 #define TSTRING std::wstring
 #define TO_TSTRING std::to_wstring
 #define TSTRING_REGEX_VALID wstring_regex_valid
@@ -365,8 +549,18 @@ __inline static size_t wstring_split_to_vector(std::vector<std::wstring> & wsv, 
 #define TSTRING_READER wstring_reader
 #define TSTRING_REPLACE_ALL wstring_replace_all
 #define TSTRING_SPLIT_TO_VECTOR wstring_split_to_vector
+
+#define STRING_FORMAT	STRING_FORMAT_W
+#define ParseError				ParseErrorW
+#define GetFilePathDrive		GetFilePathDriveW
+#define GetFilePathDir			GetFilePathDirW
+#define GetFilePathExt			GetFilePathExtW
+#define GetFilePathFname		GetFilePathFnameW
+#define SplitFilePath			SplitFilePathW
 #endif
 
+#define To_Lower TO_LOWER
+#define To_Upper TO_UPPER
 #define _tstring TSTRING
 #define tstring TSTRING
 #define _to_tstring TO_TSTRING
@@ -607,7 +801,7 @@ __inline static DWORD GetProgramPath(_TCHAR tFilePath[MAX_PATH] = _T(""))
 {
 	DWORD dwSize = 0;
 	_TCHAR * pT = NULL;
-	dwSize = GetModuleFileName(GetModuleHandle(NULL), tFilePath, MAX_PATH);
+	dwSize = ::GetModuleFileName(GetModuleHandle(NULL), tFilePath, MAX_PATH);
 	if (dwSize)
 	{
 		pT = _tcsrchr(tFilePath, _T('\\'));
@@ -624,7 +818,7 @@ __inline static UINT GetSystemPath(_TCHAR tFilePath[MAX_PATH] = _T(""))
 {
 	UINT uSize = 0;
 	_TCHAR * pT = NULL;
-	uSize = GetSystemDirectory(tFilePath, MAX_PATH);
+	uSize = ::GetSystemDirectory(tFilePath, MAX_PATH);
 	if (uSize)
 	{
 		pT = _tcsrchr(tFilePath, _T('\\'));
@@ -863,4 +1057,683 @@ __inline static void TRACE_PRINT_W(FILE * fStream, LPCWSTR lpType, LPCWSTR lpszF
 #define FATAL_PRINT(lpszFormat, ...)	TRACE_PRINT_W(stderr, (L"[FATAL]"), lpszFormat, __VA_ARGS__)
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：执行程序命令并获取执行打印信息
+// 参    数：输出的文件行内容数据、要执行的命令
+// 返 回 值：bool返回类型，成功返回true；失败返回false
+// 编 写 者: ppshuai 20141126
+//////////////////////////////////////////////////////////////////////////
+__inline static bool ExecuteCommand(TSTRINGVECTOR * pStringVector, tstring tCommandLine)
+{
+	bool result = false;
+	FILE * ppipe = NULL;
+	tstring tItemText = TEXT("");
+	_TCHAR tItemChar[2] = { TEXT('\0') };
+
+	if (pStringVector)
+	{
+		// Open pipe to execute command line
+		ppipe = _tpopen(tCommandLine.c_str(), TEXT("rb"));
+		if (ppipe)
+		{
+			/* Read pipe until end of file, or an error occurs. */
+			while (fread(&tItemChar, sizeof(_TCHAR), 1, ppipe))
+			{
+				if ((*tItemChar != TEXT('\n'))
+					&& (*tItemChar != TEXT('\0')))
+				{
+					*(tItemChar + 1) = TEXT('\0');
+					tItemText.append(tItemChar);
+				}
+				else
+				{
+					pStringVector->push_back(tItemText);
+					tItemText.empty();
+					tItemText = TEXT("");
+				}
+			}
+
+			pStringVector->push_back(tItemText);
+
+			/* Close pipe and print return value of pPipe. */
+			if (feof(ppipe))
+			{
+				result = true;
+				_pclose(ppipe);
+				ppipe = NULL;
+			}
+		}
+	}
+
+	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：执行程序命令并获取执行打印信息
+// 参    数：输出的文件行内容数据、要执行的命令
+// 返 回 值：bool返回类型，成功返回true；失败返回false
+// 编 写 者: ppshuai 20141126
+//////////////////////////////////////////////////////////////////////////
+__inline static bool ExecuteCommandEx(TSTRINGVECTOR * pStdOutputStringVector,
+	TSTRINGVECTOR * pStdErrorStringVector,
+	tstring tExecuteFile,
+	tstring tCommandLine)
+{
+	bool result = false;
+	STARTUPINFO si = { 0 };
+	HANDLE hStdErrorRead = NULL;
+	HANDLE hStdOutputRead = NULL;
+	HANDLE hStdErrorWrite = NULL;
+	HANDLE hStdOutputWrite = NULL;
+	SECURITY_ATTRIBUTES sa = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	tstring tItemText = TEXT("");
+	_TCHAR tItemChar[2] = { TEXT('\0') };
+	unsigned long ulBytesOfRead = 0;
+	unsigned long ulBytesOfWritten = 0;
+
+	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESTDHANDLES;
+
+
+
+	// Set the bInheritHandle flag so pipe handles are inherited.
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = TRUE;
+	sa.lpSecurityDescriptor = NULL;
+
+	// Create a pipe for the child process's STDOUT.
+	if (CreatePipe(&hStdOutputRead, &hStdOutputWrite, &sa, 0) &&
+		CreatePipe(&hStdErrorRead, &hStdErrorWrite, &sa, 0))
+	{
+		// Ensure the read handle to the pipe for STDOUT is not inherited.
+		if (SetHandleInformation(hStdOutputRead, HANDLE_FLAG_INHERIT, 0) &&
+			SetHandleInformation(hStdErrorRead, HANDLE_FLAG_INHERIT, 0))
+		{
+			si.hStdOutput = hStdOutputWrite;
+			si.hStdError = hStdErrorWrite;
+			si.wShowWindow = SW_HIDE;
+			si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+
+			// Start the child process.
+			if (CreateProcess(tExecuteFile.size() ? tExecuteFile.c_str() : NULL,   // No module name (use command line)
+				(TCHAR *)tCommandLine.c_str(),        // Command line
+				NULL,           // Process handle not inheritable
+				NULL,           // Thread handle not inheritable
+				TRUE,          // Set handle inheritance to FALSE
+				0,              // No creation flags
+				NULL,           // Use parent's environment block
+				NULL,           // Use parent's starting directory
+				&si,            // Pointer to STARTUPINFO structure
+				&pi))           // Pointer to PROCESS_INFORMATION structure
+			{
+				// Wait until child process exits.
+				//WaitForSingleObject( pi.hProcess, INFINITE );
+
+				// Close process and thread handles.
+				CloseHandle(pi.hProcess);
+				CloseHandle(pi.hThread);
+
+				if (hStdOutputWrite)
+				{
+					CloseHandle(hStdOutputWrite);
+					hStdOutputWrite = NULL;
+				}
+				if (hStdErrorWrite)
+				{
+					CloseHandle(hStdErrorWrite);
+					hStdErrorWrite = NULL;
+				}
+
+				if (pStdOutputStringVector)
+				{
+					while (ReadFile(hStdOutputRead, tItemChar, sizeof(_TCHAR),
+						&ulBytesOfRead, NULL) && ulBytesOfRead)
+					{
+						if ((*tItemChar != TEXT('\n')) &&
+							(*tItemChar != TEXT('\0')))
+						{
+							*(tItemChar + 1) = TEXT('\0');
+							tItemText.append(tItemChar);
+						}
+						else
+						{
+							pStdOutputStringVector->push_back(tItemText);
+							tItemText.empty();
+							tItemText = TEXT("");
+						}
+					}
+					pStdOutputStringVector->push_back(tItemText);
+				}
+
+				if (pStdErrorStringVector)
+				{
+					while (ReadFile(hStdErrorRead, tItemChar, sizeof(_TCHAR),
+						&ulBytesOfRead, NULL) && ulBytesOfRead)
+					{
+						if ((*tItemChar != TEXT('\n')) &&
+							(*tItemChar != TEXT('\0')))
+						{
+							*(tItemChar + 1) = TEXT('\0');
+							tItemText.append(tItemChar);
+						}
+						else
+						{
+							pStdErrorStringVector->push_back(tItemText);
+							tItemText.empty();
+							tItemText = TEXT("");
+						}
+					}
+					pStdErrorStringVector->push_back(tItemText);
+				}
+				result = true;
+			}
+		}
+	}
+
+	if (hStdErrorWrite)
+	{
+		CloseHandle(hStdErrorWrite);
+		hStdErrorWrite = NULL;
+	}
+	if (hStdOutputWrite)
+	{
+		CloseHandle(hStdOutputWrite);
+		hStdOutputWrite = NULL;
+	}
+	if (hStdErrorRead)
+	{
+		CloseHandle(hStdErrorRead);
+		hStdErrorRead = NULL;
+	}
+	if (hStdOutputRead)
+	{
+		CloseHandle(hStdOutputRead);
+		hStdOutputRead = NULL;
+	}
+
+	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：执行程序命令并获取执行打印信息
+// 参    数：输出的文件行内容数据、要执行的命令
+// 返 回 值：BOOL返回类型，成功返回TRUE；失败返回FALSE
+// 编 写 者: ppshuai 20141126
+//////////////////////////////////////////////////////////////////////////
+__inline static BOOL ExecuteProcess(TCHAR * pProcName, TCHAR * pCmdLine,
+	BOOL bShowFlag = FALSE, DWORD dwMilliseconds = INFINITE)
+{
+	BOOL bResult = FALSE;
+	DWORD dwShowFlag = 0;
+	STARTUPINFO si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	DWORD dwCmdLineSizeLength = 0;
+	TCHAR szCmdLine[MAX_PATH * 4 + 1] = { 0 };
+
+	si.cb = sizeof(si);
+
+	dwShowFlag = bShowFlag ? NULL : CREATE_NO_WINDOW;
+	if (pCmdLine != NULL)
+	{
+		dwCmdLineSizeLength = (lstrlen(pCmdLine) < sizeof(szCmdLine)) ?
+			lstrlen(pCmdLine) : sizeof(szCmdLine);
+		lstrcpyn(szCmdLine, pCmdLine, dwCmdLineSizeLength);
+		bResult = ::CreateProcess(pProcName, szCmdLine, NULL, NULL, FALSE,
+			NORMAL_PRIORITY_CLASS | dwShowFlag, NULL, NULL, &si, &pi);
+	}
+	else
+	{
+		bResult = ::CreateProcess(pProcName, szCmdLine, NULL, NULL, FALSE,
+			NORMAL_PRIORITY_CLASS | dwShowFlag, NULL, NULL, &si, &pi);
+	}
+
+	if (bResult)
+	{
+		WaitForSingleObject(pi.hProcess, dwMilliseconds);
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+	}
+
+	return bResult;
+}
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：执行程序命令并获取执行打印信息
+// 参    数：要删除的文件名
+// 返 回 值：bool返回类型，成功返回true；失败返回false
+// 编 写 者: ppshuai 20141126
+//////////////////////////////////////////////////////////////////////////
+__inline static BOOL ForceDeleteFile(TCHAR * pszFileName)
+{
+	BOOL bResult = FALSE;
+	TCHAR tSystemPath[MAX_PATH] = { 0 };
+	TCHAR tCmdLine[MAX_PATH * 4 + 1] = { 0 };
+
+	if (pszFileName && (*pszFileName))
+	{
+		GetSystemPath(tSystemPath);
+		_stprintf(tCmdLine, TEXT("%sCMD.EXE /c DEL /F /S /Q \"%s\""), tSystemPath, pszFileName);
+		bResult = ExecuteProcess(NULL, tCmdLine);
+	}
+
+	return bResult;
+}
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：遍历目录获取指定文件列表
+// 参    数：输出的文件行内容数据、过滤后缀名、过滤的前缀字符
+// 返 回 值：bool返回类型，成功返回true；失败返回false
+// 编 写 者: ppshuai 20141112
+//////////////////////////////////////////////////////////////////////////
+__inline static BOOL DirectoryTraversal(std::vector<TSTRING> * pTV, LPCTSTR lpRootPath = _T("."), LPCTSTR lpExtension = _T("*.*"))
+{
+	BOOL bResult = FALSE;
+	HANDLE hFindFile = NULL;
+	WIN32_FIND_DATA wfd = { 0 };
+	_TCHAR tFindPath[MAX_PATH + 1] = { 0 };
+
+	//构建遍历根目录
+	wsprintf(tFindPath, TEXT("%s%s"), lpRootPath, lpExtension);
+
+	hFindFile = FindFirstFileEx(tFindPath, FindExInfoStandard, &wfd, FindExSearchNameMatch, NULL, 0);
+	//hFindFile = FindFirstFile(tRootPath, &wfd);
+	if (hFindFile != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
+			{
+				pTV->push_back(TSTRING(TSTRING(lpRootPath) + wfd.cFileName));
+			}
+			else
+			{
+				if (lstrcmp(wfd.cFileName, _T(".")) && lstrcmp(wfd.cFileName, _T("..")))
+				{
+					bResult = DirectoryTraversal(pTV, TSTRING(TSTRING(lpRootPath) + wfd.cFileName + _T("\\")).c_str(), lpExtension);
+				}
+			}
+		} while (FindNextFile(hFindFile, &wfd));
+
+		FindClose(hFindFile);
+		hFindFile = NULL;
+		bResult = TRUE;
+	}
+
+	return bResult;
+}
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：遍历目录获取指定文件列表
+// 参    数：输出的文件行内容数据、过滤后缀名、过滤的前缀字符
+// 返 回 值：bool返回类型，成功返回true；失败返回false
+// 编 写 者: ppshuai 20141112
+//////////////////////////////////////////////////////////////////////////
+__inline static BOOL DirectoryTraversal(std::map<SIZE_T, TSTRING> * pSTMAP, LPCTSTR lpRootPath = _T("."), LPCTSTR lpExtension = _T("*.*"))
+{
+	BOOL bResult = FALSE;
+	HANDLE hFindFile = NULL;
+	WIN32_FIND_DATA wfd = { 0 };
+	_TCHAR tFindPath[MAX_PATH + 1] = { 0 };
+
+	//构建遍历根目录
+	wsprintf(tFindPath, TEXT("%s%s"), lpRootPath, lpExtension);
+
+	hFindFile = FindFirstFileEx(tFindPath, FindExInfoStandard, &wfd, FindExSearchNameMatch, NULL, 0);
+	//hFindFile = FindFirstFile(tRootPath, &wfd);
+	if (hFindFile != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			pSTMAP->insert(std::map<SIZE_T, TSTRING>::value_type(pSTMAP->size(), TSTRING(TSTRING(lpRootPath) + wfd.cFileName)));
+
+			if (((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) && (lstrcmp(wfd.cFileName, _T(".")) && lstrcmp(wfd.cFileName, _T(".."))))
+			{
+				bResult = DirectoryTraversal(pSTMAP, TSTRING(TSTRING(lpRootPath) + wfd.cFileName + _T("\\")).c_str(), lpExtension);
+			}
+
+		} while (FindNextFile(hFindFile, &wfd));
+
+		FindClose(hFindFile);
+		hFindFile = NULL;
+		bResult = TRUE;
+	}
+
+	return bResult;
+}
+//////////////////////////////////////////////////////////////////////////
+// 函数说明：遍历目录获取指定文件列表
+// 参    数：输出的文件行内容数据、过滤后缀名、过滤的前缀字符
+// 返 回 值：bool返回类型，成功返回true；失败返回false
+// 编 写 者: ppshuai 20141112
+//////////////////////////////////////////////////////////////////////////
+__inline static BOOL DirectoryTraversal(std::map<TSTRING, TSTRING> * pTTMAP, LPCTSTR lpFindPath = _T(".\\"), LPCTSTR lpRootPath = _T(".\\"), LPCTSTR lpExtension = _T("*.*"))
+{
+	BOOL bResult = FALSE;
+	HANDLE hFindFile = NULL;
+	WIN32_FIND_DATA wfd = { 0 };
+	_TCHAR tChildPath[MAX_PATH + 1] = { 0 };
+	_TCHAR tFindFileName[MAX_PATH + 1] = { 0 };
+
+	if ((lstrlen(lpFindPath) >= lstrlen(lpRootPath)) && StrStrI(lpFindPath, lpRootPath))
+	{
+		wsprintf(tChildPath, _T("%s"), lpFindPath + lstrlen(lpRootPath));
+	}
+
+	//构建遍历根目录
+	wsprintf(tFindFileName, TEXT("%s%s"), lpFindPath, lpExtension);
+
+	hFindFile = FindFirstFileEx(tFindFileName, FindExInfoStandard, &wfd, FindExSearchNameMatch, NULL, 0);
+	//hFindFile = FindFirstFile(tRootPath, &wfd);
+	if (hFindFile != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY)
+			{
+				pTTMAP->insert(std::map<TSTRING, TSTRING>::value_type((TSTRING(lpFindPath) + wfd.cFileName), TSTRING(tChildPath) + wfd.cFileName));
+			}
+			else
+			{
+				if (lstrcmp(wfd.cFileName, _T(".")) && lstrcmp(wfd.cFileName, _T("..")))
+				{
+					pTTMAP->insert(std::map<TSTRING, TSTRING>::value_type(TSTRING(lpFindPath) + wfd.cFileName, TSTRING(tChildPath) + wfd.cFileName + _T("\\")));
+					bResult = DirectoryTraversal(pTTMAP, TSTRING(TSTRING(lpFindPath) + wfd.cFileName + _T("\\")).c_str(), lpRootPath, lpExtension);
+				}
+			}
+		} while (FindNextFile(hFindFile, &wfd));
+
+		FindClose(hFindFile);
+		hFindFile = NULL;
+		bResult = TRUE;
+	}
+
+	return bResult;
+}
+//判断目录是否存在，若不存在则创建
+__inline static BOOL CreateCascadeDirectory(LPCTSTR lpPathName, //Directory name
+	LPSECURITY_ATTRIBUTES lpSecurityAttributes = NULL  // Security attribute
+)
+{
+	_TCHAR *pToken = NULL;
+	_TCHAR tPathTemp[MAX_PATH] = { 0 };
+	_TCHAR tPathName[MAX_PATH] = { 0 };
+
+	_tcscpy(tPathName, lpPathName);
+	pToken = _tcstok(tPathName, _T("\\"));
+	while (pToken)
+	{
+		_sntprintf(tPathTemp, sizeof(tPathTemp) / sizeof(_TCHAR), _T("%s%s\\"), tPathTemp, pToken);
+		if (!IsFileExistEx(tPathTemp))
+		{
+			//创建失败时还应删除已创建的上层目录，此次略
+			if (!CreateDirectory(tPathTemp, lpSecurityAttributes))
+			{
+				_tprintf(_T("CreateDirectory Failed: %d\n"), GetLastError());
+				return FALSE;
+			}
+		}
+		pToken = _tcstok(NULL, _T("\\"));
+	}
+	return TRUE;
+}
+
+// 文件内存映射
+__inline static LPVOID MapViewOfFileAgain(HANDLE hFileMapping, LPVOID * lppBaseAddress, ULARGE_INTEGER * pui, SIZE_T stNumberOfBytesToMap = 0, LPVOID lpBaseAddress = 0)
+{
+	if (lppBaseAddress && (*lppBaseAddress))
+	{
+		::UnmapViewOfFile((*lppBaseAddress));
+		(*lppBaseAddress) = NULL;
+	}
+	return ((*lppBaseAddress) = ::MapViewOfFileEx(hFileMapping, FILE_MAP_ALL_ACCESS, pui->HighPart, pui->LowPart, stNumberOfBytesToMap, lpBaseAddress));
+}
+
+__inline static void MapRelease(HANDLE * phFileMapping, LPVOID * lpBaseAddress)
+{
+	if (lpBaseAddress && (*lpBaseAddress))
+	{
+		// 从进程的地址空间撤消文件数据映像
+		::UnmapViewOfFile((*lpBaseAddress));
+		(*lpBaseAddress) = NULL;
+	}
+
+	if (phFileMapping && (*phFileMapping))
+	{
+		// 关闭文件映射对象
+		::CloseHandle((*phFileMapping));
+		(*phFileMapping) = NULL;
+	}
+}
+
+__inline static HANDLE MapFileCreate(LPVOID * lpFileData, LPCTSTR lpFileName)
+{
+	DWORD dwResult = 0;
+	PBYTE pbFile = NULL;
+	BOOL bLoopFlag = FALSE;
+	HANDLE hWaitEvent[] = { 0, 0 };
+	DWORD dwWaitEventNum = sizeof(hWaitEvent) / sizeof(HANDLE);
+
+	SYSTEM_INFO si = { 0 };
+	HANDLE hFileMapping = NULL;
+	LPVOID lpBaseAddress = NULL;
+	ULONGLONG ullFileVolume = 0LL;
+	SIZE_T stNumberOfBytesToMap = 0;
+	ULARGE_INTEGER uiFileSize = { 0, 0 };
+
+	// 创建文件内核对象，其句柄保存于hFile
+	HANDLE hFile = ::CreateFile(lpFileName,
+		GENERIC_WRITE | GENERIC_READ,
+		FILE_SHARE_READ,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_FLAG_SEQUENTIAL_SCAN,
+		NULL);
+
+	uiFileSize.LowPart = ::GetFileSize(hFile, &uiFileSize.HighPart);
+	// 创建文件映射内核对象，句柄保存于hFileMapping
+	hFileMapping = CreateFileMapping(hFile, NULL, PAGE_READWRITE,
+		uiFileSize.HighPart, uiFileSize.LowPart, NULL);
+	if (hFile)
+	{
+		// 释放文件内核对象
+		CloseHandle(hFile);
+		hFile = NULL;
+	}
+
+	if (hFileMapping)
+	{
+		// 设定大小、偏移量等参数	
+		//SystemKernel::GetNativeSystemInformation(&si);
+		//ullFileVolume = si.dwAllocationGranularity;
+
+		// 将文件数据映射到进程的地址空间
+		(*lpFileData) = MapViewOfFileEx(hFileMapping, FILE_MAP_ALL_ACCESS,
+			uiFileSize.HighPart, uiFileSize.LowPart, stNumberOfBytesToMap, lpBaseAddress);
+	}
+
+	return hFileMapping;
+}
+
+__inline static HANDLE MapCreate(LPVOID * lpData, LPCTSTR lpMapName, ULARGE_INTEGER * puiFileSize)
+{
+	SYSTEM_INFO si = { 0 };
+	HANDLE hFileMapping = NULL;
+	LPVOID lpBaseAddress = NULL;
+	ULONGLONG ullFileVolume = 0LL;
+	SIZE_T stNumberOfBytesToMap = 0;
+
+	// 创建文件映射内核对象，句柄保存于hFileMapping
+	hFileMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+		puiFileSize->HighPart, puiFileSize->LowPart, lpMapName);
+	if (hFileMapping)
+	{
+		// 设定大小、偏移量等参数	
+		//PPSHUAI::SystemKernel::GetNativeSystemInformation(&si);
+		//ullFileVolume = si.dwAllocationGranularity;
+
+		// 将文件数据映射到进程的地址空间
+		(*lpData) = MapViewOfFileEx(hFileMapping, FILE_MAP_ALL_ACCESS, 0, 0, puiFileSize->QuadPart, lpBaseAddress);
+	}
+
+	return hFileMapping;
+}
+__inline static BOOL SelectSaveFile(_TCHAR(&tFileName)[MAX_PATH], const _TCHAR * ptFilter = _T("Execute Files (*.EXE)\0*.EXE\0All Files (*.*)\0*.*\0\0"), HWND hWndOwner = NULL, DWORD dwFlags = OFN_EXPLORER | OFN_ENABLEHOOK | OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST, LPOFNHOOKPROC lpofnHookProc = NULL)
+{
+	BOOL bResult = FALSE;
+	OPENFILENAME ofn = { 0 };
+	ofn.lStructSize = sizeof(OPENFILENAME);
+	ofn.lpstrFilter = ptFilter;
+	ofn.lpstrFile = tFileName;
+	ofn.hwndOwner = hWndOwner;
+	ofn.lpfnHook = lpofnHookProc;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.Flags = dwFlags;
+	bResult = GetSaveFileName(&ofn);
+	if (bResult == FALSE)
+	{
+		//dwError = CommDlgExtendedError();
+		//return bResult;
+	}
+	return bResult;
+}
+__inline static BOOL SelectOpenFile(_TCHAR(&tFileName)[MAX_PATH], const _TCHAR * ptFilter = _T("Execute Files (*.EXE)\0*.EXE\0All Files (*.*)\0*.*\0\0"), HWND hWndOwner = NULL, DWORD dwFlags = OFN_EXPLORER | OFN_ENABLEHOOK | OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST, LPOFNHOOKPROC lpofnHookProc = NULL)
+{
+	BOOL bResult = FALSE;
+	OPENFILENAME ofn = { 0 };
+	ofn.lStructSize = sizeof(OPENFILENAME);
+	ofn.lpstrFilter = ptFilter;
+	ofn.lpstrFile = tFileName;
+	ofn.hwndOwner = hWndOwner;
+	ofn.lpfnHook = lpofnHookProc;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.Flags = dwFlags;
+	bResult = GetOpenFileName(&ofn);
+	if (bResult == FALSE)
+	{
+		//dwError = CommDlgExtendedError();
+		//return bResult;
+	}
+	return bResult;
+}
+//获取程序工作路径
+__inline static tstring GetWorkPath()
+{
+	tstring tsWorkPath = _T("");
+	_TCHAR tWorkPath[MAX_PATH] = { 0 };
+	GetCurrentDirectory(MAX_PATH, tWorkPath);
+	if (*tWorkPath)
+	{
+		tsWorkPath = tstring(tWorkPath) + _T("\\");
+	}
+	return tsWorkPath;
+}
+
+//获取系统临时路径
+__inline static tstring GetTempPath()
+{
+	_TCHAR tTempPath[MAX_PATH] = { 0 };
+	::GetTempPath(MAX_PATH, tTempPath);
+	return tstring(tTempPath);
+}
+
+//获取程序文件路径
+__inline static tstring GetProgramPath()
+{
+	tstring tsFilePath = _T("");
+	_TCHAR * pFoundPosition = 0;
+	_TCHAR tFilePath[MAX_PATH] = { 0 };
+	GetModuleFileName(NULL, tFilePath, MAX_PATH);
+	if (*tFilePath)
+	{
+		pFoundPosition = _tcsrchr(tFilePath, _T('\\'));
+		if (*(++pFoundPosition))
+		{
+			*pFoundPosition = _T('\0');
+		}
+		tsFilePath = tFilePath;
+	}
+	return tsFilePath;
+}
+
+__inline static //获取系统路径
+tstring GetSystemPath()
+{
+	tstring tsSystemPath = _T("");
+	_TCHAR tSystemPath[MAX_PATH] = { 0 };
+	GetSystemDirectory(tSystemPath, MAX_PATH);
+	if (*tSystemPath)
+	{
+		tsSystemPath = tstring(tSystemPath) + _T("\\");
+	}
+	return tsSystemPath;
+}
+
+__inline static //获取系统路径
+tstring GetSystemPathX64()
+{
+	tstring tsSystemPath = _T("");
+	_TCHAR tSystemPath[MAX_PATH] = { 0 };
+	GetSystemWow64Directory(tSystemPath, MAX_PATH);
+	if (*tSystemPath)
+	{
+		tsSystemPath = tstring(tSystemPath) + _T("\\");
+	}
+	return tsSystemPath;
+}
+__inline static
+BOOL FileIsExists(LPCTSTR pFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+
+	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
+		? ((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) : FALSE);
+}
+__inline static
+BOOL PathIsExists(LPCTSTR pFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
+		? !((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) : FALSE);
+}
+__inline static
+BOOL IsPathExists(LPCTSTR pFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
+		? !((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) : FALSE);
+}
+__inline static
+BOOL IsFileExist(LPCTSTR fileName)
+{
+	HANDLE hFindFile = NULL;
+	WIN32_FIND_DATA	findData = { 0 };
+
+	hFindFile = FindFirstFile(fileName, &findData);
+	if (hFindFile != INVALID_HANDLE_VALUE)
+	{
+		FindClose(hFindFile);
+		hFindFile = NULL;
+		return TRUE;
+	}
+
+	return FALSE;
+}
+__inline static
+BOOL IsFileExistEx(LPCTSTR lpFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+	GET_FILEEX_INFO_LEVELS gfil = GetFileExInfoStandard;
+
+	if (GetFileAttributes(lpFileName) != INVALID_FILE_ATTRIBUTES)
+	{
+		return TRUE;
+	}
+	else
+	{
+		if (GetFileAttributesEx(lpFileName, gfil, &wfad) &&
+			wfad.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 #endif //__USUALLYUTILITY_H_
