@@ -24,6 +24,9 @@
 
 #include <codecvt>
 
+//#define AToW_EX(s,l) std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>>(new std::codecvt_byname<wchar_t, char, std::mbstate_t>(l)).from_bytes(s)
+//#define WToA_EX(s,l) std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>>(new std::codecvt_byname<wchar_t, char, std::mbstate_t>(l)).to_bytes(s)
+
 #define AToW_EX(s,l) std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>(l)).from_bytes(s)
 #define WToA_EX(s,l) std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>(l)).to_bytes(s)
 #define AToW(s) AToW_EX(s,"chs")
@@ -233,6 +236,7 @@ __inline static size_t wstring_regex_find(std::wstring & result, std::vector<std
 	}
 	catch (const std::exception & e)
 	{
+		//result = std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>>(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
 		result = std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
 	}
 
@@ -246,6 +250,7 @@ __inline static size_t wstring_regex_replace_all(std::wstring & result, std::wst
 	}
 	catch (const std::exception & e)
 	{
+		//result = std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>>(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
 		result = std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
 	}
 	return data.length();
@@ -502,21 +507,29 @@ __inline static void SplitFilePathW(LPCWSTR lpFileName, std::wstring & strDrive,
 	strExt = szExt;
 }
 
-__inline static void ToLowerA(std::string & s)
+__inline static std::string ToLowerA(std::string s)
 {
-	std::transform(s.begin(), s.end(), s.begin(), std::tolower);
+	std::string r("");
+	std::transform(s.begin(), s.end(), r.begin(), tolower);
+	return r;
 }
-__inline static void ToLowerW(std::wstring & ws)
+__inline static std::wstring ToLowerW(std::wstring ws)
 {
-	std::transform(ws.begin(), ws.end(), ws.begin(), std::tolower);
+	std::wstring wr(L"");
+	std::transform(ws.begin(), ws.end(), wr.begin(), tolower);
+	return wr;
 }
-__inline static void ToUpperA(std::string & s)
+__inline static std::string ToUpperA(std::string s)
 {
-	std::transform(s.begin(), s.end(), s.begin(), std::toupper);
+	std::string r("");
+	std::transform(s.begin(), s.end(), r.begin(), toupper);
+	return r;
 }
-__inline static void ToUpperW(std::wstring & ws)
+__inline static std::wstring ToUpperW(std::wstring ws)
 {
-	std::transform(ws.begin(), ws.end(), ws.begin(), std::toupper);
+	std::wstring wr(L"");
+	std::transform(ws.begin(), ws.end(), wr.begin(), toupper);
+	return wr;
 }
 
 #if !defined(UNICODE) && !defined(_UNICODE)
@@ -1063,7 +1076,7 @@ __inline static void TRACE_PRINT_W(FILE * fStream, LPCWSTR lpType, LPCWSTR lpszF
 // 返 回 值：bool返回类型，成功返回true；失败返回false
 // 编 写 者: ppshuai 20141126
 //////////////////////////////////////////////////////////////////////////
-__inline static bool ExecuteCommand(TSTRINGVECTOR * pStringVector, tstring tCommandLine)
+__inline static bool ExecuteCommand(std::vector<tstring> * pStringVector, tstring tCommandLine)
 {
 	bool result = false;
 	FILE * ppipe = NULL;
@@ -1114,8 +1127,8 @@ __inline static bool ExecuteCommand(TSTRINGVECTOR * pStringVector, tstring tComm
 // 返 回 值：bool返回类型，成功返回true；失败返回false
 // 编 写 者: ppshuai 20141126
 //////////////////////////////////////////////////////////////////////////
-__inline static bool ExecuteCommandEx(TSTRINGVECTOR * pStdOutputStringVector,
-	TSTRINGVECTOR * pStdErrorStringVector,
+__inline static bool ExecuteCommandEx(std::vector<tstring> * pStdOutputStringVector,
+	std::vector<tstring> * pStdErrorStringVector,
 	tstring tExecuteFile,
 	tstring tCommandLine)
 {
@@ -1276,8 +1289,8 @@ __inline static BOOL ExecuteProcess(TCHAR * pProcName, TCHAR * pCmdLine,
 	dwShowFlag = bShowFlag ? NULL : CREATE_NO_WINDOW;
 	if (pCmdLine != NULL)
 	{
-		dwCmdLineSizeLength = (lstrlen(pCmdLine) < sizeof(szCmdLine)) ?
-			lstrlen(pCmdLine) : sizeof(szCmdLine);
+		dwCmdLineSizeLength = (_tcslen(pCmdLine) < sizeof(szCmdLine)) ?
+			_tcslen(pCmdLine) : sizeof(szCmdLine);
 		lstrcpyn(szCmdLine, pCmdLine, dwCmdLineSizeLength);
 		bResult = ::CreateProcess(pProcName, szCmdLine, NULL, NULL, FALSE,
 			NORMAL_PRIORITY_CLASS | dwShowFlag, NULL, NULL, &si, &pi);
@@ -1296,6 +1309,65 @@ __inline static BOOL ExecuteProcess(TCHAR * pProcName, TCHAR * pCmdLine,
 	}
 
 	return bResult;
+}
+
+__inline static
+BOOL FileIsExists(LPCTSTR pFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+
+	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
+		? ((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) : FALSE);
+}
+__inline static
+BOOL PathIsExists(LPCTSTR pFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
+		? !((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) : FALSE);
+}
+__inline static
+BOOL IsPathExists(LPCTSTR pFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
+		? !((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) : FALSE);
+}
+__inline static
+BOOL IsFileExist(LPCTSTR fileName)
+{
+	HANDLE hFindFile = NULL;
+	WIN32_FIND_DATA	findData = { 0 };
+
+	hFindFile = FindFirstFile(fileName, &findData);
+	if (hFindFile != INVALID_HANDLE_VALUE)
+	{
+		FindClose(hFindFile);
+		hFindFile = NULL;
+		return TRUE;
+	}
+
+	return FALSE;
+}
+__inline static
+BOOL IsFileExistEx(LPCTSTR lpFileName)
+{
+	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
+	GET_FILEEX_INFO_LEVELS gfil = GetFileExInfoStandard;
+
+	if (GetFileAttributes(lpFileName) != INVALID_FILE_ATTRIBUTES)
+	{
+		return TRUE;
+	}
+	else
+	{
+		if (GetFileAttributesEx(lpFileName, gfil, &wfad) &&
+			wfad.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 //////////////////////////////////////////////////////////////////////////
 // 函数说明：执行程序命令并获取执行打印信息
@@ -1346,7 +1418,7 @@ __inline static BOOL DirectoryTraversal(std::vector<TSTRING> * pTV, LPCTSTR lpRo
 			}
 			else
 			{
-				if (lstrcmp(wfd.cFileName, _T(".")) && lstrcmp(wfd.cFileName, _T("..")))
+				if (_tcscmp(wfd.cFileName, _T(".")) && _tcscmp(wfd.cFileName, _T("..")))
 				{
 					bResult = DirectoryTraversal(pTV, TSTRING(TSTRING(lpRootPath) + wfd.cFileName + _T("\\")).c_str(), lpExtension);
 				}
@@ -1384,7 +1456,7 @@ __inline static BOOL DirectoryTraversal(std::map<SIZE_T, TSTRING> * pSTMAP, LPCT
 		{
 			pSTMAP->insert(std::map<SIZE_T, TSTRING>::value_type(pSTMAP->size(), TSTRING(TSTRING(lpRootPath) + wfd.cFileName)));
 
-			if (((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) && (lstrcmp(wfd.cFileName, _T(".")) && lstrcmp(wfd.cFileName, _T(".."))))
+			if (((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) && (_tcscmp(wfd.cFileName, _T(".")) && _tcscmp(wfd.cFileName, _T(".."))))
 			{
 				bResult = DirectoryTraversal(pSTMAP, TSTRING(TSTRING(lpRootPath) + wfd.cFileName + _T("\\")).c_str(), lpExtension);
 			}
@@ -1412,13 +1484,13 @@ __inline static BOOL DirectoryTraversal(std::map<TSTRING, TSTRING> * pTTMAP, LPC
 	_TCHAR tChildPath[MAX_PATH + 1] = { 0 };
 	_TCHAR tFindFileName[MAX_PATH + 1] = { 0 };
 
-	if ((lstrlen(lpFindPath) >= lstrlen(lpRootPath)) && StrStrI(lpFindPath, lpRootPath))
+	if ((_tcslen(lpFindPath) >= _tcslen(lpRootPath)) && _tcsstr(TO_LOWER(lpFindPath).c_str(), TO_LOWER(lpRootPath).c_str()))
 	{
-		wsprintf(tChildPath, _T("%s"), lpFindPath + lstrlen(lpRootPath));
+		_stprintf_s(tChildPath, _T("%s"), lpFindPath + _tcslen(lpRootPath));
 	}
 
 	//构建遍历根目录
-	wsprintf(tFindFileName, TEXT("%s%s"), lpFindPath, lpExtension);
+	_stprintf_s(tFindFileName, TEXT("%s%s"), lpFindPath, lpExtension);
 
 	hFindFile = FindFirstFileEx(tFindFileName, FindExInfoStandard, &wfd, FindExSearchNameMatch, NULL, 0);
 	//hFindFile = FindFirstFile(tRootPath, &wfd);
@@ -1432,7 +1504,7 @@ __inline static BOOL DirectoryTraversal(std::map<TSTRING, TSTRING> * pTTMAP, LPC
 			}
 			else
 			{
-				if (lstrcmp(wfd.cFileName, _T(".")) && lstrcmp(wfd.cFileName, _T("..")))
+				if (_tcscmp(wfd.cFileName, _T(".")) && _tcscmp(wfd.cFileName, _T("..")))
 				{
 					pTTMAP->insert(std::map<TSTRING, TSTRING>::value_type(TSTRING(lpFindPath) + wfd.cFileName, TSTRING(tChildPath) + wfd.cFileName + _T("\\")));
 					bResult = DirectoryTraversal(pTTMAP, TSTRING(TSTRING(lpFindPath) + wfd.cFileName + _T("\\")).c_str(), lpRootPath, lpExtension);
@@ -1677,63 +1749,5 @@ tstring GetSystemPathX64()
 		tsSystemPath = tstring(tSystemPath) + _T("\\");
 	}
 	return tsSystemPath;
-}
-__inline static
-BOOL FileIsExists(LPCTSTR pFileName)
-{
-	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
-
-	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
-		? ((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) : FALSE);
-}
-__inline static
-BOOL PathIsExists(LPCTSTR pFileName)
-{
-	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
-	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
-		? !((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) : FALSE);
-}
-__inline static
-BOOL IsPathExists(LPCTSTR pFileName)
-{
-	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
-	return (GetFileAttributesEx(pFileName, GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &wfad)
-		? !((wfad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) : FALSE);
-}
-__inline static
-BOOL IsFileExist(LPCTSTR fileName)
-{
-	HANDLE hFindFile = NULL;
-	WIN32_FIND_DATA	findData = { 0 };
-
-	hFindFile = FindFirstFile(fileName, &findData);
-	if (hFindFile != INVALID_HANDLE_VALUE)
-	{
-		FindClose(hFindFile);
-		hFindFile = NULL;
-		return TRUE;
-	}
-
-	return FALSE;
-}
-__inline static
-BOOL IsFileExistEx(LPCTSTR lpFileName)
-{
-	WIN32_FILE_ATTRIBUTE_DATA wfad = { 0 };
-	GET_FILEEX_INFO_LEVELS gfil = GetFileExInfoStandard;
-
-	if (GetFileAttributes(lpFileName) != INVALID_FILE_ATTRIBUTES)
-	{
-		return TRUE;
-	}
-	else
-	{
-		if (GetFileAttributesEx(lpFileName, gfil, &wfad) &&
-			wfad.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
-		{
-			return TRUE;
-		}
-	}
-	return FALSE;
 }
 #endif //__USUALLYUTILITY_H_
