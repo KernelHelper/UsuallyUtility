@@ -361,7 +361,7 @@ __inline static std::string STRING_FORMAT_A(const CHAR * paFormat, ...)
 	if (nAS > 0)
 	{
 		A.resize((nAS + sizeof(CHAR)) * sizeof(CHAR), ('\0'));
-		_vsnprintf((CHAR *)A.c_str(), nAS * sizeof(CHAR), paFormat, valist);
+		_vsnprintf_s((CHAR *)A.c_str(), nAS * sizeof(CHAR), nAS * sizeof(CHAR), paFormat, valist);
 	}
 
 	va_end(valist);
@@ -382,7 +382,7 @@ __inline static std::wstring STRING_FORMAT_W(const WCHAR * pwFormat, ...)
 	if (nWS > 0)
 	{
 		W.resize((nWS + sizeof(WCHAR)) * sizeof(WCHAR), (L'\0'));
-		_vsnwprintf((WCHAR *)W.c_str(), nWS * sizeof(WCHAR), pwFormat, valist);
+		_vsnwprintf_s((WCHAR *)W.c_str(), nWS * sizeof(WCHAR), nWS * sizeof(WCHAR), pwFormat, valist);
 	}
 
 	va_end(valist);
@@ -397,7 +397,7 @@ __inline static std::string GetFilePathDriveA(LPCSTR lpFileName)
 	CHAR szFname[_MAX_FNAME] = { 0 };
 	CHAR szExt[_MAX_EXT] = { 0 };
 
-	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_splitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szDrive;
 }
@@ -408,7 +408,7 @@ __inline static std::wstring GetFilePathDriveW(LPCWSTR lpFileName)
 	WCHAR szFname[_MAX_FNAME] = { 0 };
 	WCHAR szExt[_MAX_EXT] = { 0 };
 
-	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_wsplitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szDrive;
 }
@@ -419,7 +419,7 @@ __inline static std::string GetFilePathDirA(LPCSTR lpFileName)
 	CHAR szFname[_MAX_FNAME] = { 0 };
 	CHAR szExt[_MAX_EXT] = { 0 };
 
-	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_splitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szDir;
 }
@@ -430,7 +430,7 @@ __inline static std::wstring GetFilePathDirW(LPCWSTR lpFileName)
 	WCHAR szFname[_MAX_FNAME] = { 0 };
 	WCHAR szExt[_MAX_EXT] = { 0 };
 
-	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_wsplitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szDir;
 }
@@ -441,7 +441,7 @@ __inline static std::string GetFilePathExtA(LPCSTR lpFileName)
 	CHAR szFname[_MAX_FNAME] = { 0 };
 	CHAR szExt[_MAX_EXT] = { 0 };
 
-	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_splitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szExt;
 }
@@ -452,7 +452,7 @@ __inline static std::wstring GetFilePathExtW(LPCWSTR lpFileName)
 	WCHAR szFname[_MAX_FNAME] = { 0 };
 	WCHAR szExt[_MAX_EXT] = { 0 };
 
-	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_wsplitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szExt;
 }
@@ -463,7 +463,7 @@ __inline static std::string GetFilePathFnameA(LPCSTR lpFileName)
 	CHAR szFname[_MAX_FNAME] = { 0 };
 	CHAR szExt[_MAX_EXT] = { 0 };
 
-	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_splitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szFname;
 }
@@ -474,7 +474,7 @@ __inline static std::wstring GetFilePathFnameW(LPCWSTR lpFileName)
 	WCHAR szFname[_MAX_FNAME] = { 0 };
 	WCHAR szExt[_MAX_EXT] = { 0 };
 
-	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_wsplitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 
 	return szFname;
 }
@@ -486,7 +486,7 @@ __inline static void SplitFilePathA(LPCSTR lpFileName, std::string & strDrive,
 	CHAR szFname[_MAX_FNAME] = { 0 };
 	CHAR szExt[_MAX_EXT] = { 0 };
 
-	_splitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_splitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 	strDrive = szDrive;
 	strDir = szDir;
 	strFname = szFname;
@@ -500,7 +500,7 @@ __inline static void SplitFilePathW(LPCWSTR lpFileName, std::wstring & strDrive,
 	WCHAR szFname[_MAX_FNAME] = { 0 };
 	WCHAR szExt[_MAX_EXT] = { 0 };
 
-	_wsplitpath(lpFileName, szDrive, szDir, szFname, szExt);
+	_wsplitpath_s(lpFileName, szDrive, szDir, szFname, szExt);
 	strDrive = szDrive;
 	strDir = szDir;
 	strFname = szFname;
@@ -591,6 +591,9 @@ __inline static std::wstring ToUpperW(std::wstring ws)
 #define tstring_split_to_vector TSTRING_SPLIT_TO_VECTOR
 #define _tstring_split_to_vector TSTRING_SPLIT_TO_VECTOR
 
+static FILE * STD_IN = NULL;
+static FILE * STD_OUT = NULL;
+static FILE * STD_ERR = NULL;
 //初始化调试窗口显示
 __inline static void InitDebugConsole(const _TCHAR * ptText = _T("TraceDebugWindow"))
 {
@@ -598,9 +601,10 @@ __inline static void InitDebugConsole(const _TCHAR * ptText = _T("TraceDebugWind
 	{
 		::SetConsoleTitle(ptText);
 
-		_tfreopen(_T("CONIN$"), _T("rb"), stdin);
-		_tfreopen(_T("CONOUT$"), _T("wb"), stdout);
-		_tfreopen(_T("CONOUT$"), _T("wb"), stderr);
+		_tfreopen_s(&STD_IN, _T("CONIN$"), _T("rb"), stdin);
+		_tfreopen_s(&STD_OUT, _T("CONOUT$"), _T("wb"), stdout);
+		_tfreopen_s(&STD_ERR, _T("CONOUT$"), _T("wb"), stderr);
+
 		_tsetlocale(LC_ALL, _T("chs"));	
 	}
 }
@@ -608,9 +612,9 @@ __inline static void InitDebugConsole(const _TCHAR * ptText = _T("TraceDebugWind
 //释放掉调试窗口显示
 __inline static void ExitDebugConsole()
 {
-    fclose(stderr);
-    fclose(stdin);
-    fclose(stdout);
+    fclose(STD_ERR);
+    fclose(STD_OUT);
+    fclose(STD_IN);
 
 	::FreeConsole();
 }
@@ -893,7 +897,7 @@ __inline static void OUTPUT_DEBUG_TRACE_A(LPCSTR lpszFormat, ...)
 		if (lpt)
 		{
 			memset(lpt, 0, size * sizeof(CHAR));
-			_vsnprintf(lpt, size, lpszFormat, args);
+			_vsnprintf_s(lpt, size, size, lpszFormat, args);
 			OutputDebugStringA((LPCSTR)lpt);
 			free(lpt);
 			lpt = NULL;
@@ -915,7 +919,7 @@ __inline static void OUTPUT_DEBUG_TRACE_W(LPCWSTR lpszFormat, ...)
 		if (lpt)
 		{
 			memset(lpt, 0, size * sizeof(WCHAR));
-			_vsnwprintf(lpt, size, lpszFormat, args);
+			_vsnwprintf_s(lpt, size, size, lpszFormat, args);
 			OutputDebugStringW((LPCWSTR)lpt);
 			free(lpt);
 			lpt = NULL;
@@ -985,7 +989,7 @@ __inline static void TRACE_PRINT_A(FILE * fStream, LPCSTR lpType, LPCSTR lpszFor
 		if (lpt)
 		{
 			memset(lpt, 0, size * sizeof(CHAR));
-			_vsnprintf(lpt, size, lpszFormat, args);
+			_vsnprintf_s(lpt, size, size, lpszFormat, args);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wAttributes);
 			fprintf(fStream, ("%s%s"), lpType, lpt);
 			free(lpt);
@@ -1044,7 +1048,7 @@ __inline static void TRACE_PRINT_W(FILE * fStream, LPCWSTR lpType, LPCWSTR lpszF
 		if (lpt)
 		{
 			memset(lpt, 0, size * sizeof(WCHAR));
-			_vsnwprintf(lpt, size, lpszFormat, args);
+			_vsnwprintf_s(lpt, size, size, lpszFormat, args);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wAttributes);
 			fwprintf(fStream, (L"%s%s"), lpType, lpt);
 			free(lpt);
@@ -1384,7 +1388,7 @@ __inline static BOOL ForceDeleteFile(TCHAR * pszFileName)
 	if (pszFileName && (*pszFileName))
 	{
 		GetSystemPath(tSystemPath);
-		_stprintf(tCmdLine, TEXT("%sCMD.EXE /c DEL /F /S /Q \"%s\""), tSystemPath, pszFileName);
+		_stprintf_s(tCmdLine, TEXT("%sCMD.EXE /c DEL /F /S /Q \"%s\""), tSystemPath, pszFileName);
 		bResult = ExecuteProcess(NULL, tCmdLine);
 	}
 
@@ -1525,24 +1529,25 @@ __inline static BOOL CreateCascadeDirectory(LPCTSTR lpPathName, //Directory name
 )
 {
 	_TCHAR *pToken = NULL;
+	_TCHAR *pContext = NULL;
 	_TCHAR tPathTemp[MAX_PATH] = { 0 };
 	_TCHAR tPathName[MAX_PATH] = { 0 };
 
-	_tcscpy(tPathName, lpPathName);
-	pToken = _tcstok(tPathName, _T("\\"));
+	_tcscpy_s(tPathName, lpPathName);
+	pToken = _tcstok_s(tPathName, _T("\\"), &pContext);
 	while (pToken)
 	{
-		_sntprintf(tPathTemp, sizeof(tPathTemp) / sizeof(_TCHAR), _T("%s%s\\"), tPathTemp, pToken);
+		_sntprintf_s(tPathTemp, sizeof(tPathTemp) / sizeof(_TCHAR), _T("%s%s\\"), tPathTemp, pToken);
 		if (!IsFileExistEx(tPathTemp))
 		{
 			//创建失败时还应删除已创建的上层目录，此次略
 			if (!CreateDirectory(tPathTemp, lpSecurityAttributes))
 			{
-				_tprintf(_T("CreateDirectory Failed: %d\n"), GetLastError());
+				_tprintf_s(_T("CreateDirectory Failed: %d\n"), GetLastError());
 				return FALSE;
 			}
 		}
-		pToken = _tcstok(NULL, _T("\\"));
+		pToken = _tcstok_s(NULL, _T("\\"), &pContext);
 	}
 	return TRUE;
 }
