@@ -170,6 +170,7 @@ __inline static std::string string_replace_all(std::string &strData, std::string
 	while ((stPos = strData.find(strSrc, stPos)) != std::string::npos)
 	{
 		strData.replace(stPos, strSrc.length(), strDst);
+		stPos += strDst.length() - strSrc.length();
 	}
 
 	return strData;
@@ -315,6 +316,7 @@ __inline static std::wstring wstring_replace_all(std::wstring &wstrData, std::ws
 	while ((stPos = wstrData.find(wstrSrc, stPos)) != std::wstring::npos)
 	{
 		wstrData.replace(stPos, wstrSrc.length(), wstrDst);
+		stPos += wstrDst.length() - wstrSrc.length();
 	}
 
 	return wstrData;
@@ -662,7 +664,7 @@ __inline static size_t GetDropFiles(std::map<TSTRING, TSTRING> * pttmap, HDROP h
 
 	return nNumOfFiles;
 }
-__inline static size_t GetDropFiles(std::vector<TSTRING> * pttmap, HDROP hDropInfo)
+__inline static size_t GetDropFiles(std::vector<TSTRING> * ptv, HDROP hDropInfo)
 {
 	UINT nIndex = 0;
 	UINT nNumOfFiles = 0;
@@ -675,7 +677,7 @@ __inline static size_t GetDropFiles(std::vector<TSTRING> * pttmap, HDROP hDropIn
 	{
 		//得到文件名
 		DragQueryFile(hDropInfo, nIndex, (LPTSTR)tszFilePathName, _MAX_PATH);
-		pttmap->push_back(tszFilePathName);
+		ptv->push_back(tszFilePathName);
 	}
 
 	DragFinish(hDropInfo);
@@ -814,7 +816,7 @@ __inline static BOOL StartupProgram(LPCTSTR lpApplicationName, LPTSTR lpCommandL
 	return bResult;
 }
 
-__inline static DWORD GetProgramPath(_TCHAR tFilePath[MAX_PATH] = _T(""))
+__inline static DWORD GetProgramPath(_TCHAR tFilePath[MAX_PATH])
 {
 	DWORD dwSize = 0;
 	_TCHAR * pT = NULL;
@@ -831,7 +833,7 @@ __inline static DWORD GetProgramPath(_TCHAR tFilePath[MAX_PATH] = _T(""))
 	return dwSize;
 }
 
-__inline static UINT GetSystemPath(_TCHAR tFilePath[MAX_PATH] = _T(""))
+__inline static UINT GetSystemPath(_TCHAR tFilePath[MAX_PATH])
 {
 	UINT uSize = 0;
 	_TCHAR * pT = NULL;
