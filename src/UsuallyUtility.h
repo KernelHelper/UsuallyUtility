@@ -63,6 +63,113 @@
 #define UTF8ToT(s)	UTF8ToW(s)
 #endif
 
+//通用版将wstring转化为string
+__inline std::string W_To_A(std::wstring wstr, unsigned int codepage = CP_ACP)
+{
+	int nwstrlen = WideCharToMultiByte(codepage, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
+	if (nwstrlen > 0)
+	{
+		std::string str(nwstrlen + 1, '\0');
+		WideCharToMultiByte(codepage, 0, wstr.c_str(), -1, (LPSTR)str.c_str(), nwstrlen, NULL, NULL);
+		return str;
+	}
+
+	return ("");
+}
+
+//通用版将string转化为wstring
+__inline std::wstring A_To_W(std::string str, unsigned int codepage = CP_ACP)
+{
+	int nstrlen = MultiByteToWideChar(codepage, 0, str.c_str(), -1, NULL, 0);
+	if (nstrlen > 0)
+	{
+		std::wstring wstr(nstrlen + 1, L'\0');
+		MultiByteToWideChar(codepage, 0, str.c_str(), -1, (LPWSTR)wstr.c_str(), nstrlen);
+		return wstr;
+	}
+
+	return (L"");
+}
+
+__inline static
+#if !defined(UNICODE) && !defined(_UNICODE)
+std::string
+#else
+std::wstring
+#endif
+A_To_T(std::string str)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+	return str;
+#else
+	return A_To_W(str);
+#endif
+}
+
+__inline static
+#if !defined(UNICODE) && !defined(_UNICODE)
+std::string
+#else
+std::wstring
+#endif
+W_To_T(std::wstring wstr)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+	return W_To_A(wstr);
+#else
+	return wstr;
+#endif
+}
+
+__inline static std::string T_To_A(
+#if !defined(UNICODE) && !defined(_UNICODE)
+	std::string
+#else
+	std::wstring
+#endif
+	tsT)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+	return tsT;
+#else
+	return W_To_A(tsT);
+#endif
+}
+
+__inline static std::wstring T_To_W(
+#if !defined(UNICODE) && !defined(_UNICODE)
+	std::string
+#else
+	std::wstring
+#endif
+	tsT)
+{
+#if !defined(UNICODE) && !defined(_UNICODE)
+	return A_To_W(tsT);
+#else
+	return tsT;
+#endif
+}
+
+//将From编码转化为To编码
+__inline static std::string CodePage_FromTo(std::string str,
+	unsigned int from_codepage, unsigned int to_codepage)
+{
+	return W_To_A(A_To_W(str, from_codepage), to_codepage);
+}
+
+//将UTF8转化为ANSI
+__inline static std::string UTF8ToANSI(std::string str)
+{
+	return CodePage_FromTo(str, CP_UTF8, CP_ACP);
+}
+
+//将ANSI转化为UTF8
+__inline static std::string ANSIToUTF8(std::string str)
+{
+	return CodePage_FromTo(str, CP_ACP, CP_UTF8);
+}
+
 __inline static bool string_regex_valid(std::string data, std::string pattern)
 {
 	return std::regex_match(data, std::regex(pattern));
@@ -363,7 +470,7 @@ __inline static std::string STRING_FORMAT_A(const CHAR * paFormat, ...)
 	if (nAS > 0)
 	{
 		A.resize((nAS + sizeof(CHAR)) * sizeof(CHAR), ('\0'));
-		_vsnprintf_s((CHAR *)A.c_str(), nAS * sizeof(CHAR), nAS * sizeof(CHAR), paFormat, valist);
+		_vsnprintf_s((CHAR *)A.c_str(), (nAS + sizeof(CHAR)) * sizeof(CHAR), nAS * sizeof(CHAR), paFormat, valist);
 	}
 
 	va_end(valist);
@@ -384,7 +491,7 @@ __inline static std::wstring STRING_FORMAT_W(const WCHAR * pwFormat, ...)
 	if (nWS > 0)
 	{
 		W.resize((nWS + sizeof(WCHAR)) * sizeof(WCHAR), (L'\0'));
-		_vsnwprintf_s((WCHAR *)W.c_str(), nWS * sizeof(WCHAR), nWS * sizeof(WCHAR), pwFormat, valist);
+		_vsnwprintf_s((WCHAR *)W.c_str(), (nWS + sizeof(WCHAR)) * sizeof(WCHAR), nWS * sizeof(WCHAR), pwFormat, valist);
 	}
 
 	va_end(valist);
@@ -895,11 +1002,11 @@ __inline static void OUTPUT_DEBUG_TRACE_A(LPCSTR lpszFormat, ...)
 	if (size > 0)
 	{
 		size++;
-		lpt = (LPSTR)malloc(size * sizeof(CHAR));
+		lpt = (LPSTR)malloc((size+sizeof(CHAR)) * sizeof(CHAR));
 		if (lpt)
 		{
-			memset(lpt, 0, size * sizeof(CHAR));
-			_vsnprintf_s(lpt, size, size, lpszFormat, args);
+			memset(lpt, 0, (size + sizeof(CHAR)) * sizeof(CHAR));
+			_vsnprintf_s(lpt, (size + sizeof(CHAR)), size, lpszFormat, args);
 			OutputDebugStringA((LPCSTR)lpt);
 			free(lpt);
 			lpt = NULL;
@@ -917,11 +1024,11 @@ __inline static void OUTPUT_DEBUG_TRACE_W(LPCWSTR lpszFormat, ...)
 	if (size > 0)
 	{
 		size++;
-		lpt = (LPWSTR)malloc(size * sizeof(WCHAR));
+		lpt = (LPWSTR)malloc((size + sizeof(WCHAR)) * sizeof(WCHAR));
 		if (lpt)
 		{
-			memset(lpt, 0, size * sizeof(WCHAR));
-			_vsnwprintf_s(lpt, size, size, lpszFormat, args);
+			memset(lpt, 0, (size + sizeof(WCHAR)) * sizeof(WCHAR));
+			_vsnwprintf_s(lpt, (size + sizeof(WCHAR)), size, lpszFormat, args);
 			OutputDebugStringW((LPCWSTR)lpt);
 			free(lpt);
 			lpt = NULL;
@@ -987,11 +1094,11 @@ __inline static void TRACE_PRINT_A(FILE * fStream, LPCSTR lpType, LPCSTR lpszFor
 	if (size > 0)
 	{
 		size++;
-		lpt = (LPSTR)malloc(size * sizeof(CHAR));
+		lpt = (LPSTR)malloc((size + sizeof(CHAR)) * sizeof(CHAR));
 		if (lpt)
 		{
-			memset(lpt, 0, size * sizeof(CHAR));
-			_vsnprintf_s(lpt, size, size, lpszFormat, args);
+			memset(lpt, 0, (size + sizeof(CHAR)) * sizeof(CHAR));
+			_vsnprintf_s(lpt, (size + sizeof(CHAR)), size, lpszFormat, args);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wAttributes);
 			fprintf(fStream, ("%s%s"), lpType, lpt);
 			free(lpt);
@@ -1046,11 +1153,11 @@ __inline static void TRACE_PRINT_W(FILE * fStream, LPCWSTR lpType, LPCWSTR lpszF
 	if (size > 0)
 	{
 		size++;
-		lpt = (LPWSTR)malloc(size * sizeof(WCHAR));
+		lpt = (LPWSTR)malloc((size + sizeof(WCHAR)) * sizeof(WCHAR));
 		if (lpt)
 		{
-			memset(lpt, 0, size * sizeof(WCHAR));
-			_vsnwprintf_s(lpt, size, size, lpszFormat, args);
+			memset(lpt, 0, (size + sizeof(WCHAR)) * sizeof(WCHAR));
+			_vsnwprintf_s(lpt, (size + sizeof(WCHAR)), size, lpszFormat, args);
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wAttributes);
 			fwprintf(fStream, (L"%s%s"), lpType, lpt);
 			free(lpt);
@@ -1390,7 +1497,7 @@ __inline static BOOL ForceDeleteFile(TCHAR * pszFileName)
 	if (pszFileName && (*pszFileName))
 	{
 		GetSystemPath(tSystemPath);
-		_stprintf_s(tCmdLine, TEXT("%sCMD.EXE /c DEL /F /S /Q \"%s\""), tSystemPath, pszFileName);
+		_sntprintf_s(tCmdLine, sizeof(tCmdLine) / sizeof(*tCmdLine), sizeof(tCmdLine) / sizeof(*tCmdLine) - sizeof(char), TEXT("%sCMD.EXE /c DEL /F /S /Q \"%s\""), tSystemPath, pszFileName);
 		bResult = ExecuteProcess(NULL, tCmdLine);
 	}
 
@@ -1492,11 +1599,11 @@ __inline static BOOL DirectoryTraversal(std::map<TSTRING, TSTRING> * pTTMAP, LPC
 
 	if ((_tcslen(lpFindPath) >= _tcslen(lpRootPath)) && _tcsstr(TO_LOWER(lpFindPath).c_str(), TO_LOWER(lpRootPath).c_str()))
 	{
-		_stprintf_s(tChildPath, _T("%s"), lpFindPath + _tcslen(lpRootPath));
+		_sntprintf_s(tChildPath, sizeof(tChildPath) / sizeof(*tChildPath), sizeof(tChildPath) / sizeof(*tChildPath) - sizeof(char), _T("%s"), lpFindPath + _tcslen(lpRootPath));
 	}
 
 	//构建遍历根目录
-	_stprintf_s(tFindFileName, TEXT("%s%s"), lpFindPath, lpExtension);
+	_sntprintf_s(tFindFileName, sizeof(tFindFileName) / sizeof(*tFindFileName), sizeof(tFindFileName) / sizeof(*tFindFileName) - sizeof(char), TEXT("%s%s"), lpFindPath, lpExtension);
 
 	hFindFile = FindFirstFileEx(tFindFileName, FindExInfoStandard, &wfd, FindExSearchNameMatch, NULL, 0);
 	//hFindFile = FindFirstFile(tRootPath, &wfd);
@@ -1539,7 +1646,7 @@ __inline static BOOL CreateCascadeDirectory(LPCTSTR lpPathName, //Directory name
 	pToken = _tcstok_s(tPathName, _T("\\"), &pContext);
 	while (pToken)
 	{
-		_sntprintf_s(tPathTemp, sizeof(tPathTemp) / sizeof(_TCHAR), _T("%s%s\\"), tPathTemp, pToken);
+		_sntprintf_s(tPathTemp, sizeof(tPathTemp) / sizeof(*tPathTemp), sizeof(tPathTemp) / sizeof(*tPathTemp) - sizeof(char), _T("%s%s\\"), tPathTemp, pToken);
 		if (!IsFileExistEx(tPathTemp))
 		{
 			//创建失败时还应删除已创建的上层目录，此次略
