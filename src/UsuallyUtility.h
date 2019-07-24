@@ -15,11 +15,9 @@
 #include <atlconv.h>
 #include <shellapi.h>
 #include <atlexcept.h>
+#include <commdlg.h>
 
 #define SYSTEM_PATH "SYSTEM32\\"
-#define ADB_PATH    "ADB\\"
-
-#define ADB_NAME    "ADB.EXE"
 #define CMD_NAME    "CMD.EXE"
 
 #include <codecvt>
@@ -64,7 +62,7 @@
 #endif
 
 //通用版将wstring转化为string
-__inline std::string W_To_A(std::wstring wstr, unsigned int codepage = CP_ACP)
+__inline std::string W_To_A(const std::wstring &wstr, unsigned int codepage = CP_ACP)
 {
 	int nwstrlen = WideCharToMultiByte(codepage, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
 	if (nwstrlen > 0)
@@ -78,7 +76,7 @@ __inline std::string W_To_A(std::wstring wstr, unsigned int codepage = CP_ACP)
 }
 
 //通用版将string转化为wstring
-__inline std::wstring A_To_W(std::string str, unsigned int codepage = CP_ACP)
+__inline std::wstring A_To_W(const std::string &str, unsigned int codepage = CP_ACP)
 {
 	int nstrlen = MultiByteToWideChar(codepage, 0, str.c_str(), -1, NULL, 0);
 	if (nstrlen > 0)
@@ -97,7 +95,7 @@ std::string
 #else
 std::wstring
 #endif
-A_To_T(std::string str)
+A_To_T(const std::string& str)
 {
 #if !defined(UNICODE) && !defined(_UNICODE)
 	return str;
@@ -112,7 +110,7 @@ std::string
 #else
 std::wstring
 #endif
-W_To_T(std::wstring wstr)
+W_To_T(const std::wstring &wstr)
 {
 #if !defined(UNICODE) && !defined(_UNICODE)
 	return W_To_A(wstr);
@@ -122,12 +120,13 @@ W_To_T(std::wstring wstr)
 }
 
 __inline static std::string T_To_A(
+	const
 #if !defined(UNICODE) && !defined(_UNICODE)
 	std::string
 #else
 	std::wstring
 #endif
-	tsT)
+	&tsT)
 {
 #if !defined(UNICODE) && !defined(_UNICODE)
 	return tsT;
@@ -137,12 +136,13 @@ __inline static std::string T_To_A(
 }
 
 __inline static std::wstring T_To_W(
+	const
 #if !defined(UNICODE) && !defined(_UNICODE)
 	std::string
 #else
 	std::wstring
 #endif
-	tsT)
+	&tsT)
 {
 #if !defined(UNICODE) && !defined(_UNICODE)
 	return A_To_W(tsT);
@@ -152,29 +152,29 @@ __inline static std::wstring T_To_W(
 }
 
 //将From编码转化为To编码
-__inline static std::string CodePage_FromTo(std::string str,
+__inline static std::string CodePage_FromTo(const std::string &str,
 	unsigned int from_codepage, unsigned int to_codepage)
 {
 	return W_To_A(A_To_W(str, from_codepage), to_codepage);
 }
 
 //将UTF8转化为ANSI
-__inline static std::string UTF8ToANSI(std::string str)
+__inline static std::string UTF8ToANSI(const std::string& str)
 {
 	return CodePage_FromTo(str, CP_UTF8, CP_ACP);
 }
 
 //将ANSI转化为UTF8
-__inline static std::string ANSIToUTF8(std::string str)
+__inline static std::string ANSIToUTF8(const std::string &str)
 {
 	return CodePage_FromTo(str, CP_ACP, CP_UTF8);
 }
 
-__inline static bool string_regex_valid(std::string data, std::string pattern)
+__inline static bool string_regex_valid(const std::string& data, const std::string& pattern)
 {
 	return std::regex_match(data, std::regex(pattern));
 }
-__inline static size_t string_regex_replace_all(std::string & result, std::string & data, std::string replace, std::string pattern, std::regex_constants::match_flag_type matchflagtype = std::regex_constants::match_default)
+__inline static size_t string_regex_replace_all(std::string & result, std::string & data, const std::string& replace, const std::string& pattern, const std::regex_constants::match_flag_type& matchflagtype = std::regex_constants::match_default)
 {
 	try
 	{
@@ -186,7 +186,7 @@ __inline static size_t string_regex_replace_all(std::string & result, std::strin
 	}
 	return data.length();
 }
-__inline static size_t string_regex_find(std::string & result, std::vector<std::vector<std::string>> & svv, std::string & data, std::string pattern)
+__inline static size_t string_regex_find(std::string & result, std::vector<std::vector<std::string>> & svv, const std::string & data, const std::string& pattern)
 {
 	std::smatch smatch;
 	std::string::const_iterator ite = data.end();
@@ -217,8 +217,8 @@ __inline static size_t string_regex_find(std::string & result, std::vector<std::
 
 	return svv.size();
 }
-__inline static std::string::size_type string_reader(std::string &result, std::string strData,
-	std::string strStart, std::string strFinal, std::string::size_type stPos = 0,
+__inline static std::string::size_type string_reader(std::string &result, const std::string &strData,
+	const std::string& strStart, const std::string& strFinal, std::string::size_type stPos = 0,
 	bool bTakeStart = false, bool bTakeFinal = false)
 {
 	std::string::size_type stRetPos = std::string::npos;
@@ -245,8 +245,8 @@ __inline static std::string::size_type string_reader(std::string &result, std::s
 
 	return stRetPos;
 }
-__inline static std::string string_reader(std::string strData,
-	std::string strStart, std::string strFinal,
+__inline static std::string string_reader(const std::string& strData,
+	const std::string& strStart, const std::string& strFinal,
 	bool bTakeStart = false, bool bTakeFinal = false)
 {
 	std::string strRet = ("");
@@ -272,7 +272,7 @@ __inline static std::string string_reader(std::string strData,
 
 	return strRet;
 }
-__inline static std::string string_replace_all(std::string &strData, std::string strDst, std::string strSrc, std::string::size_type stPos = 0)
+__inline static std::string string_replace_all(std::string &strData, const std::string& strDst, const std::string& strSrc, std::string::size_type stPos = 0)
 {
 	while ((stPos = strData.find(strSrc, stPos)) != std::string::npos)
 	{
@@ -282,7 +282,7 @@ __inline static std::string string_replace_all(std::string &strData, std::string
 
 	return strData;
 }
-__inline static size_t string_split_to_vector(std::vector<std::string> & sv, std::string strData, std::string strSplitter, std::string::size_type stPos = 0)
+__inline static size_t string_split_to_vector(std::vector<std::string> & sv, const std::string& strData, const std::string& strSplitter, std::string::size_type stPos = 0)
 {
 	std::string strTmp = ("");
 	std::string::size_type stIdx = 0;
@@ -313,11 +313,11 @@ __inline static size_t string_split_to_vector(std::vector<std::string> & sv, std
 	return sv.size();
 }
 
-__inline static bool wstring_regex_valid(std::wstring data, std::wstring pattern)
+__inline static bool wstring_regex_valid(const std::wstring & data, const std::wstring &pattern)
 {
 	return std::regex_match(data, std::wregex(pattern));
 }
-__inline static size_t wstring_regex_find(std::wstring & result, std::vector<std::vector<std::wstring>> & svv, std::wstring & data, std::wstring pattern)
+__inline static size_t wstring_regex_find(std::wstring & result, std::vector<std::vector<std::wstring>> & svv, const std::wstring& data, const std::wstring& pattern)
 {
 	std::wsmatch smatch;
 	std::wstring::const_iterator ite = data.end();
@@ -345,12 +345,12 @@ __inline static size_t wstring_regex_find(std::wstring & result, std::vector<std
 	catch (const std::exception & e)
 	{
 		//result = std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>>(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
-		result = std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
+		//result = std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
 	}
 
 	return svv.size();
 }
-__inline static size_t wstring_regex_replace_all(std::wstring & result, std::wstring & data, std::wstring replace, std::wstring pattern, std::regex_constants::match_flag_type matchflagtype = std::regex_constants::match_default)
+__inline static size_t wstring_regex_replace_all(std::wstring & result, std::wstring & data, const std::wstring& replace, const std::wstring& pattern, std::regex_constants::match_flag_type matchflagtype = std::regex_constants::match_default)
 {
 	try
 	{
@@ -359,12 +359,12 @@ __inline static size_t wstring_regex_replace_all(std::wstring & result, std::wst
 	catch (const std::exception & e)
 	{
 		//result = std::wstring_convert<std::codecvt_byname<wchar_t, char, std::mbstate_t>>(new std::codecvt_byname<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
-		result = std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
+		//result = std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>>(new std::codecvt<wchar_t, char, std::mbstate_t>("chs")).from_bytes(e.what());
 	}
 	return data.length();
 }
-__inline static std::wstring::size_type wstring_reader(std::wstring &result, std::wstring wstrData,
-	std::wstring wstrStart, std::wstring wstrFinal, std::wstring::size_type stPos = 0,
+__inline static std::wstring::size_type wstring_reader(std::wstring &result, const std::wstring& wstrData,
+	const std::wstring& wstrStart, const std::wstring& wstrFinal, std::wstring::size_type stPos = 0,
 	bool bTakeStart = false, bool bTakeFinal = false)
 {
 	std::wstring::size_type stRetPos = std::wstring::npos;
@@ -391,8 +391,8 @@ __inline static std::wstring::size_type wstring_reader(std::wstring &result, std
 
 	return stRetPos;
 }
-__inline static std::wstring wstring_reader(std::wstring wstrData,
-	std::wstring wstrStart, std::wstring wstrFinal,
+__inline static std::wstring wstring_reader(const std::wstring& wstrData,
+	const std::wstring& wstrStart, const std::wstring& wstrFinal,
 	bool bTakeStart = false, bool bTakeFinal = false)
 {
 	std::wstring wstrRet = (L"");
@@ -418,7 +418,7 @@ __inline static std::wstring wstring_reader(std::wstring wstrData,
 
 	return wstrRet;
 }
-__inline static std::wstring wstring_replace_all(std::wstring &wstrData, std::wstring wstrDst, std::wstring wstrSrc, std::wstring::size_type stPos = 0)
+__inline static std::wstring wstring_replace_all(std::wstring &wstrData, const std::wstring& wstrDst, const std::wstring& wstrSrc, std::wstring::size_type stPos = 0)
 {
 	while ((stPos = wstrData.find(wstrSrc, stPos)) != std::wstring::npos)
 	{
@@ -428,7 +428,7 @@ __inline static std::wstring wstring_replace_all(std::wstring &wstrData, std::ws
 
 	return wstrData;
 }
-__inline static size_t wstring_split_to_vector(std::vector<std::wstring> & wsv, std::wstring wstrData, std::wstring wstrSplitter, std::wstring::size_type stPos = 0)
+__inline static size_t wstring_split_to_vector(std::vector<std::wstring> & wsv, const std::wstring& wstrData, const std::wstring& wstrSplitter, std::wstring::size_type stPos = 0)
 {
 	std::wstring wstrTemp = (L"");
 	std::wstring::size_type stIdx = 0;
@@ -477,7 +477,6 @@ __inline static std::string STRING_FORMAT_A(const CHAR * paFormat, ...)
 
 	return A.c_str();
 }
-
 __inline static std::wstring STRING_FORMAT_W(const WCHAR * pwFormat, ...)
 {
 	INT nWS = 0;
@@ -498,7 +497,106 @@ __inline static std::wstring STRING_FORMAT_W(const WCHAR * pwFormat, ...)
 
 	return W.c_str();
 }
+__inline static size_t file_reader(char ** ppdata, size_t &size, std::string filename, std::string mode = "rb")
+{
+#define DATA_BASE_SIZE	0x10000
 
+	FILE * pF = 0;
+	size_t sizeofread = 0;
+
+	char * pdata = 0;
+
+	pF = fopen(filename.c_str(), mode.c_str());
+	if (pF)
+	{
+		size = 0;
+		(*ppdata) = (char *)malloc((size + DATA_BASE_SIZE) * sizeof(char));
+		while (!feof(pF))
+		{
+			sizeofread = fread((void *)((*ppdata) + size), sizeof(char), DATA_BASE_SIZE, pF);
+			size += sizeofread;
+			if (sizeofread >= DATA_BASE_SIZE)
+			{
+				break;
+			}
+			pdata = (*ppdata);
+			(*ppdata) = (char *)realloc(pdata, (size + DATA_BASE_SIZE) * sizeof(char));
+			if (!(*ppdata) || GetLastError() != ERROR_SUCCESS)
+			{
+				if (pdata)
+				{
+					free(pdata);
+					pdata = 0;
+				}
+				break;
+			}
+		}
+
+		fclose(pF);
+		pF = 0;
+	}
+
+	return size;
+
+#undef DATA_BASE_SIZE
+}
+
+__inline static size_t file_reader(std::string&data, const std::string &filename, const std::string& mode = "rb")
+{
+#define DATA_BASE_SIZE	0x10000
+
+	FILE * pF = 0;
+	size_t size = 0;
+
+	pF = fopen(filename.c_str(), mode.c_str());
+	if (pF)
+	{
+		while (!feof(pF))
+		{
+			data.resize(data.size() + DATA_BASE_SIZE);
+			size += fread((void *)(data.c_str() + data.size() - DATA_BASE_SIZE), sizeof(char), DATA_BASE_SIZE, pF);
+		}
+		data.resize(size);
+		fclose(pF);
+		pF = 0;
+	}
+
+	return size;
+
+#undef DATA_BASE_SIZE
+}
+
+__inline static size_t file_writer(const std::string& data, const std::string &filename, const std::string & mode = "wb")
+{
+	FILE * pF = 0;
+	size_t size = 0;
+
+	pF = fopen(filename.c_str(), mode.c_str());
+	if (pF)
+	{
+		size = fwrite((void *)(data.c_str()), sizeof(char), data.size(), pF);
+		fclose(pF);
+		pF = 0;
+	}
+
+	return size;
+}
+
+__inline static size_t file_writer(const char * data, size_t size, const std::string& filename, const std::string& mode = "wb")
+{
+	FILE * pF = 0;
+	size_t ssize = 0;
+
+	pF = fopen(filename.c_str(), mode.c_str());
+	if (pF)
+	{
+		ssize = fwrite((void *)(data), sizeof(char), size, pF);
+		fclose(pF);
+		pF = 0;
+	}
+
+	return ssize;
+}
 __inline static std::string GetFilePathDriveA(LPCSTR lpFileName)
 {
 	CHAR szDrive[_MAX_DRIVE] = { 0 };
@@ -616,25 +714,25 @@ __inline static void SplitFilePathW(LPCWSTR lpFileName, std::wstring & strDrive,
 	strExt = szExt;
 }
 
-__inline static std::string ToLowerA(std::string s)
+__inline static std::string ToLowerA(const std::string& s)
 {
 	std::string r("");
 	std::transform(s.begin(), s.end(), r.begin(), tolower);
 	return r;
 }
-__inline static std::wstring ToLowerW(std::wstring ws)
+__inline static std::wstring ToLowerW(const std::wstring& ws)
 {
 	std::wstring wr(L"");
 	std::transform(ws.begin(), ws.end(), wr.begin(), tolower);
 	return wr;
 }
-__inline static std::string ToUpperA(std::string s)
+__inline static std::string ToUpperA(const std::string& s)
 {
 	std::string r("");
 	std::transform(s.begin(), s.end(), r.begin(), toupper);
 	return r;
 }
-__inline static std::wstring ToUpperW(std::wstring ws)
+__inline static std::wstring ToUpperW(const std::wstring& ws)
 {
 	std::wstring wr(L"");
 	std::transform(ws.begin(), ws.end(), wr.begin(), toupper);
@@ -1189,7 +1287,7 @@ __inline static void TRACE_PRINT_W(FILE * fStream, LPCWSTR lpType, LPCWSTR lpszF
 // 返 回 值：bool返回类型，成功返回true；失败返回false
 // 编 写 者: ppshuai 20141126
 //////////////////////////////////////////////////////////////////////////
-__inline static bool ExecuteCommand(std::vector<tstring> * pStringVector, tstring tCommandLine)
+__inline static bool ExecuteCommand(std::vector<tstring> * pStringVector, const tstring& tCommandLine)
 {
 	bool result = false;
 	FILE * ppipe = NULL;
@@ -1242,8 +1340,8 @@ __inline static bool ExecuteCommand(std::vector<tstring> * pStringVector, tstrin
 //////////////////////////////////////////////////////////////////////////
 __inline static bool ExecuteCommandEx(std::vector<tstring> * pStdOutputStringVector,
 	std::vector<tstring> * pStdErrorStringVector,
-	tstring tExecuteFile,
-	tstring tCommandLine)
+	const tstring &tExecuteFile,
+	const tstring &tCommandLine)
 {
 	bool result = false;
 	STARTUPINFO si = { 0 };
@@ -1387,7 +1485,7 @@ __inline static bool ExecuteCommandEx(std::vector<tstring> * pStdOutputStringVec
 // 返 回 值：BOOL返回类型，成功返回TRUE；失败返回FALSE
 // 编 写 者: ppshuai 20141126
 //////////////////////////////////////////////////////////////////////////
-__inline static BOOL ExecuteProcess(TCHAR * pProcName, TCHAR * pCmdLine,
+__inline static BOOL ExecuteProcess(const _TCHAR * pProcName, const _TCHAR * pCmdLine,
 	BOOL bShowFlag = FALSE, DWORD dwMilliseconds = INFINITE)
 {
 	BOOL bResult = FALSE;
@@ -1395,7 +1493,7 @@ __inline static BOOL ExecuteProcess(TCHAR * pProcName, TCHAR * pCmdLine,
 	STARTUPINFO si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	DWORD dwCmdLineSizeLength = 0;
-	TCHAR szCmdLine[MAX_PATH * 4 + 1] = { 0 };
+	_TCHAR szCmdLine[MAX_PATH * 4 + 1] = { 0 };
 
 	si.cb = sizeof(si);
 
@@ -1488,7 +1586,7 @@ BOOL IsFileExistEx(LPCTSTR lpFileName)
 // 返 回 值：bool返回类型，成功返回true；失败返回false
 // 编 写 者: ppshuai 20141126
 //////////////////////////////////////////////////////////////////////////
-__inline static BOOL ForceDeleteFile(TCHAR * pszFileName)
+__inline static BOOL ForceDeleteFile(const TCHAR * pszFileName)
 {
 	BOOL bResult = FALSE;
 	TCHAR tSystemPath[MAX_PATH] = { 0 };
@@ -1756,7 +1854,15 @@ __inline static HANDLE MapCreate(LPVOID * lpData, LPCTSTR lpMapName, ULARGE_INTE
 		//ullFileVolume = si.dwAllocationGranularity;
 
 		// 将文件数据映射到进程的地址空间
-		(*lpData) = MapViewOfFileEx(hFileMapping, FILE_MAP_ALL_ACCESS, 0, 0, puiFileSize->QuadPart, lpBaseAddress);
+		if (sizeof(SIZE_T) < sizeof(ULONGLONG))
+		{
+			stNumberOfBytesToMap = puiFileSize->LowPart;
+		}
+		else
+		{
+			stNumberOfBytesToMap = puiFileSize->QuadPart;
+		}
+		(*lpData) = MapViewOfFileEx(hFileMapping, FILE_MAP_ALL_ACCESS, 0, 0, stNumberOfBytesToMap, lpBaseAddress);
 	}
 
 	return hFileMapping;
