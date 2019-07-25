@@ -12,9 +12,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <windows.h>
-#include <atlconv.h>
 #include <shellapi.h>
-#include <atlexcept.h>
 #include <commdlg.h>
 
 #define SYSTEM_PATH "SYSTEM32\\"
