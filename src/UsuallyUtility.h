@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef __USUALLYUTILITY_H_
 #define __USUALLYUTILITY_H_
@@ -1039,16 +1039,11 @@ __inline static DWORD GetProgramPath(_TCHAR tFilePath[MAX_PATH])
 __inline static UINT GetSystemPath(_TCHAR tFilePath[MAX_PATH])
 {
 	UINT uSize = 0;
-	_TCHAR * pT = NULL;
 	uSize = ::GetSystemDirectory(tFilePath, MAX_PATH);
 	if (uSize)
 	{
-		pT = _tcsrchr(tFilePath, _T('\\'));
-		if (pT)
-		{
-			*(pT + sizeof(BYTE)) = _T('\0');
-			uSize = (DWORD)(pT - tFilePath);
-		}
+		*(tFilePath + uSize) = _T('\\');
+		*(tFilePath + (++uSize)) = _T('\0');
 	}
 	return uSize;
 }
