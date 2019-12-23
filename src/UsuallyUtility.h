@@ -226,9 +226,10 @@ __inline static std::string::size_type string_reader(std::string &result, const 
 	stStartPos = strData.find(strStart, stStartPos);
 	if (stStartPos != std::string::npos)
 	{
-		stRetPos = stFinalPos = strData.find(strFinal, stStartPos + strStart.length());
+		stFinalPos = strData.find(strFinal, stStartPos + strStart.length());
 		if (stFinalPos != std::string::npos)
 		{
+			stRetPos = stFinalPos + strFinal.length();
 			if (!bTakeStart)
 			{
 				stStartPos += strStart.length();
